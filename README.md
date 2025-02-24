@@ -8,10 +8,10 @@ This project is developed as a part of the academic course: **"Electronics In Se
 
 ---
 ## **Features**
-✅ **Real-time ISL Recognition** – Converts sign language to text & speech instantly.
-✅ **Edge Computing on Raspberry Pi 5** – Runs locally without requiring cloud connectivity.
-✅ **Mediapipe Hand Tracking + LSTM Model** – Efficient gesture recognition.
-✅ **Portable and Cost-Effective** – Designed for practical, everyday use.
+-  **Real-time ISL Recognition** – Converts sign language to text & speech instantly.
+-  **Edge Computing on Raspberry Pi 5** – Runs locally without requiring cloud connectivity.
+-  **Mediapipe Hand Tracking + LSTM Model** – Efficient gesture recognition.
+-  **Portable and Cost-Effective** – Designed for practical, everyday use.
 
 ---
 ## **Hardware Requirements**
@@ -19,7 +19,6 @@ This project is developed as a part of the academic course: **"Electronics In Se
 - **RPi Camera Module v3** (or any compatible USB camera)
 - **MicroSD Card (32GB recommended)**
 - **Power Adapter for Raspberry Pi 5**
-- **Speakers (for speech output)**
 
 ---
 ## **Software Requirements**
@@ -29,31 +28,6 @@ This project is developed as a part of the academic course: **"Electronics In Se
 - **TensorFlow Lite** (for efficient LSTM model inference)
 - **OpenCV** (for image processing)
 - **Flite** (for text-to-speech conversion)
-
----
-## **Installation & Setup**
-### **1. Set up Raspberry Pi 5**
-```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install python3-pip python3-venv -y
-```
-
-### **2. Create and Activate a Virtual Environment**
-```bash
-python3 -m venv isl_env
-source isl_env/bin/activate
-```
-
-### **3. Install Dependencies**
-```bash
-pip install numpy opencv-python mediapipe tensorflow tflite-runtime
-pip install pyttsx3
-```
-
-### **4. Run the Sign Language Recognition Script**
-```bash
-python isl_recognition.py
-```
 
 ---
 ## **How It Works**
@@ -71,9 +45,9 @@ python isl_recognition.py
 
 ---
 ## **Dataset & Training**
-- The model is trained on a **custom dataset of ISL hand gestures**.
-- Data collection was done using **Mediapipe Hand Landmarks**.
-- LSTM model was trained using **TensorFlow** and later converted to **TFLite** for optimized inference on Raspberry Pi.
+- The model is trained on a **pre-existing dataset of ISL hand gestures**.
+- Data collection done using **Mediapipe Hand Landmarks**.
+- LSTM model to be trained using **TensorFlow** and later converted to **TFLite** for optimized inference on Raspberry Pi.
 
 ---
 ## **Contributors**
@@ -83,14 +57,5 @@ python isl_recognition.py
 - **Atharva Atre**
 - **Swar Kamatkar**
 
----
-## **Future Improvements**
-- Add **dynamic sentence formation** from continuous gestures.
-- Implement **multi-language support** for speech output.
-- Optimize for **lower latency and better accuracy**.
-
----
-## **License**
-This project is open-source and available under the **MIT License**.
 
 
