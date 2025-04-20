@@ -8,8 +8,7 @@ from collections import deque
 # ==== Load Scaler & Label Encoder ====
 scaler = joblib.load("/home/saishk/SigntoSpeechPi/models/scaler0.8953.pkl")
 label_encoder = joblib.load("/home/saishk/SigntoSpeechPi/models/label_encoder0.8953.pkl")
-print(label_encoder.classes_)
-
+print("Loaded labels:", label_encoder.classes_)
 
 # ==== Load TFLite Model ====
 interpreter = tf.lite.Interpreter(model_path="/home/saishk/SigntoSpeechPi/models/255_labels0.8953.tflite")
@@ -21,25 +20,37 @@ output_details = interpreter.get_output_details()
 mp_holistic = mp.solutions.holistic
 mp_drawing = mp.solutions.drawing_utils
 
-# ==== Landmark Extraction ====
-def extract_landmarks(results):
-    pose = np.array([[lm.x, lm.y, lm.z, lm.visibility] for lm in results.pose_landmarks.landmark]) if results.pose_landmarks else np.zeros((33, 4))
-    face = np.array([[lm.x, lm.y, lm.z] for lm in results.face_landmarks.landmark]) if results.face_landmarks else np.zeros((468, 3))
-    lh = np.array([[lm.x, lm.y, lm.z] for lm in results.left_hand_landmarks.landmark]) if results.left_hand_landmarks else np.zeros((21, 3))
-    rh = np.array([[lm.x, lm.y, lm.z] for lm in results.right_hand_landmarks.landmark]) if results.right_hand_landmarks else np.zeros((21, 3))
-    return np.concatenate([pose.flatten(), face.flatten(), lh.flatten(), rh.flatten()])
+# ==== Extract full 543 body landmarks ====
+def extract_full_body_landmarks(results):
+    all_landmarks = []
+    for lm_list in [
+        results.pose_landmarks,
+        results.face_landmarks,
+        results.left_hand_landmarks,
+        results.right_hand_landmarks
+    ]:
+        if lm_list:
+            all_landmarks.extend([[lm.x, lm.y, lm.z] for lm in lm_list.landmark])
 
-# ==== Setup Sequence Buffer ====
-sequence = deque(maxlen=30)
-predictions = deque(maxlen=20)
+    landmark_array = np.array(all_landmarks)
 
-# ==== Initialize Webcam ====
+    # Pad or truncate to exactly 543 landmarks
+    if landmark_array.shape[0] < 543:
+        landmark_array = np.pad(landmark_array, ((0, 543 - landmark_array.shape[0]), (0, 0)), mode='constant')
+    elif landmark_array.shape[0] > 543:
+        landmark_array = landmark_array[:543]
+
+    return landmark_array  # Shape: (543, 3)
+
+# ==== Webcam and Inference Setup ====
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     print("Error: Could not access the webcam.")
     exit()
 
-# ==== MediaPipe Inference Loop ====
+sequence = deque(maxlen=1)  # Only keep latest frame since model uses 1 frame
+predictions = deque(maxlen=20)
+
 with mp_holistic.Holistic(
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5,
@@ -48,7 +59,7 @@ with mp_holistic.Holistic(
     while True:
         ret, frame = cap.read()
         if not ret:
-            print("Error: Failed to capture image.")
+            print("Error: Frame capture failed.")
             break
 
         image = cv2.flip(frame, 1)
@@ -56,24 +67,28 @@ with mp_holistic.Holistic(
         results = holistic.process(image_rgb)
 
         # Draw landmarks
-        mp_drawing.draw_landmarks(image, results.face_landmarks, mp_holistic.FACEMESH_CONTOURS)
         mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS)
+        mp_drawing.draw_landmarks(image, results.face_landmarks, mp_holistic.FACEMESH_CONTOURS)
         mp_drawing.draw_landmarks(image, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
         mp_drawing.draw_landmarks(image, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
 
         try:
-            landmarks = extract_landmarks(results)
-            landmarks = scaler.transform([landmarks])
-            print(landmarks[0])
-            sequence.append(landmarks[0])
+            landmarks = extract_full_body_landmarks(results)  # Shape: (543, 3)
+            print("Landmark shape:", landmarks.shape)
 
-            print(len(sequence))
-            if len(sequence) == 30:
-                print("Sequence ready for prediction.")
-                input_data = np.expand_dims(sequence, axis=0).astype(np.float32)
+            if landmarks.shape == (543, 3):
+                # Flatten to 2D to use scaler
+                landmarks_scaled = scaler.transform(landmarks)  # Still (543, 3)
+                sequence.append(landmarks_scaled)
+
+                # Prepare input for model: shape (1, 543, 3)
+                input_data = np.expand_dims(sequence[0], axis=0).astype(np.float32)
+
+                # Run inference
                 interpreter.set_tensor(input_details[0]['index'], input_data)
                 interpreter.invoke()
                 output = interpreter.get_tensor(output_details[0]['index'])
+
                 predicted_label = np.argmax(output)
                 prediction = label_encoder.inverse_transform([predicted_label])[0]
                 predictions.append(prediction)
@@ -82,14 +97,14 @@ with mp_holistic.Holistic(
                     cv2.putText(image, f'{prediction}', (10, 40),
                                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
                     print(f"Prediction: {prediction} | Confidence: {np.max(output):.2f}")
-        except Exception:
-            pass
+            else:
+                print(f"[Warning] Skipping frame: Got {landmarks.shape}, expected (543, 3)")
 
-        # Show the frame with prediction
+        except Exception as e:
+            print("Error during inference:", str(e))
+            continue
+
         cv2.imshow("Gesture Recognition", image)
-        
-
-        # Exit on 'q' key
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
