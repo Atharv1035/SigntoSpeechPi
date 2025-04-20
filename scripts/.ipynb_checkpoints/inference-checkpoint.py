@@ -6,13 +6,11 @@ import joblib
 from collections import deque
 
 # ==== Load Scaler & Label Encoder ====
-scaler = joblib.load("/home/saishk/SigntoSpeechPi/models/scaler0.8953.pkl")
-label_encoder = joblib.load("/home/saishk/SigntoSpeechPi/models/label_encoder0.8953.pkl")
-print(label_encoder.classes_)
-
+scaler = joblib.load("../models/scaler0.8953.pkl")
+label_encoder = joblib.load("../models/label_encoder0.8953.pkl")
 
 # ==== Load TFLite Model ====
-interpreter = tf.lite.Interpreter(model_path="/home/saishk/SigntoSpeechPi/models/255_labels0.8953.tflite")
+interpreter = tf.lite.Interpreter(model_path="../models/255_labels0.8953.tflite")
 interpreter.allocate_tensors()
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
@@ -64,12 +62,9 @@ with mp_holistic.Holistic(
         try:
             landmarks = extract_landmarks(results)
             landmarks = scaler.transform([landmarks])
-            print(landmarks[0])
             sequence.append(landmarks[0])
 
-            print(len(sequence))
             if len(sequence) == 30:
-                print("Sequence ready for prediction.")
                 input_data = np.expand_dims(sequence, axis=0).astype(np.float32)
                 interpreter.set_tensor(input_details[0]['index'], input_data)
                 interpreter.invoke()
@@ -81,13 +76,11 @@ with mp_holistic.Holistic(
                 if np.max(output) > 0.8:
                     cv2.putText(image, f'{prediction}', (10, 40),
                                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
-                    print(f"Prediction: {prediction} | Confidence: {np.max(output):.2f}")
         except Exception:
             pass
 
         # Show the frame with prediction
         cv2.imshow("Gesture Recognition", image)
-        
 
         # Exit on 'q' key
         if cv2.waitKey(1) & 0xFF == ord('q'):
