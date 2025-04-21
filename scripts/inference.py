@@ -49,7 +49,7 @@ if not cap.isOpened():
     exit()
 
 sequence = deque(maxlen=1)  # Only keep latest frame since model uses 1 frame
-predictions = deque(maxlen=20)
+predictions = deque(maxlen=30)
 
 with mp_holistic.Holistic(
     min_detection_confidence=0.5,
@@ -74,11 +74,11 @@ with mp_holistic.Holistic(
 
         try:
             landmarks = extract_full_body_landmarks(results)  # Shape: (543, 3)
-            print("Landmark shape:", landmarks.shape)
+            #print("Landmark shape:", landmarks.shape)
 
             if landmarks.shape == (543, 3):
                 # Flatten to 2D to use scaler
-                landmarks_scaled = scaler.transform(landmarks)  # Still (543, 3)
+                landmarks_scaled = scaler.transform(landmarks.reshape(-1, 3)).reshape(543, 3)  # Still (543, 3)
                 sequence.append(landmarks_scaled)
 
                 # Prepare input for model: shape (1, 543, 3)
