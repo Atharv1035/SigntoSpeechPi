@@ -8,3 +8,5 @@ seaborn
 matplotlib
 picamera2   # Optional, for Raspberry Pi only
 pandas       # Optional, for confusion matrix in CSV format
+streamlit
+streamlit_webrtc
