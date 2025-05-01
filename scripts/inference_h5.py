@@ -6,9 +6,9 @@ from tensorflow.keras.models import load_model
 from collections import deque
 
 # Load model, label encoder, scaler
-loaded_model = load_model('../models/Model_255_labels0.8953.h5')
-label_encoder = joblib.load('../models/label_encoder0.8953.pkl')
-scaler = joblib.load('../models/scaler0.8953.pkl')
+loaded_model = load_model('../models/Model_56_labels0.8743.h5')
+label_encoder = joblib.load('../models/label_encoder0.8743.pkl')
+scaler = joblib.load('../models/scaler0.8743.pkl')
 
 # Mediapipe setup
 mp_holistic = mp.solutions.holistic
@@ -45,7 +45,7 @@ PREDICT_EVERY_N_FRAMES = 2
 CONFIDENCE_THRESHOLD = 0.4
 
 # Webcam
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(2)
 cap.set(cv2.CAP_PROP_FPS, 30)
 holistic = mp_holistic.Holistic(static_image_mode=False, min_detection_confidence=0.5)
 
