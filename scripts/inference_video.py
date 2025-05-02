@@ -85,6 +85,10 @@ def process_video(video_path):
 
 # Evaluate and predict for video directory
 def evaluate_video_directory(root_dir):
+    overall_correct_predictions = 0
+    overall_videos_count = 0
+    per_adjective_results = {}
+
     for adjective in os.listdir(root_dir):
         adjective_path = os.path.join(root_dir, adjective)
         print(f"\nProcessing adjective: {adjective}")  
@@ -116,8 +120,29 @@ def evaluate_video_directory(root_dir):
             accuracy = total_correct_predictions / total_videos_count
             print(f"Total Videos: {total_videos_count}, Correct Predictions: {total_correct_predictions}")
             print(f"Accuracy for adjective '{adjective}': {accuracy:.2%}")
+            per_adjective_results[adjective] = {
+                "correct": total_correct_predictions,
+                "total": total_videos_count,
+                "accuracy": accuracy
+            }
+            overall_correct_predictions += total_correct_predictions
+            overall_videos_count += total_videos_count
         else:
             print(f"No videos found for adjective: {adjective}.")
+
+    # Final summary
+    print("\n--- Overall Summary ---")
+    for adj, stats in per_adjective_results.items():
+        print(f"{adj}: {stats['correct']}/{stats['total']} correct "
+              f"({stats['accuracy']:.2%})")
+
+    if overall_videos_count > 0:
+        overall_accuracy = overall_correct_predictions / overall_videos_count
+        print(f"\nTotal Videos: {overall_videos_count}, Total Correct Predictions: {overall_correct_predictions}")
+        print(f"Overall Accuracy: {overall_accuracy:.2%}")
+    else:
+        print("No videos were processed.")
+
 
 # Main program
 if __name__ == "__main__":
