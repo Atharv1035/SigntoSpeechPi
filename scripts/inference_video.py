@@ -7,11 +7,11 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import load_model
 
 # Load the trained model
-loaded_model = load_model('../models/Model_255_labels0.8953.h5')
+loaded_model = load_model('models/Model_226_labels0.9608.h5')
 
 # Load the label encoder and scaler
-label_encoder = joblib.load('../models/label_encoder0.8953.pkl')
-scaler = joblib.load('../models/scaler0.8953.pkl')
+label_encoder = joblib.load('models/label_encoder0.9608.pkl')
+scaler = joblib.load('models/scaler0.9608.pkl')
 
 mp_holistic = mp.solutions.holistic
 mp_drawing = mp.solutions.drawing_utils
@@ -121,5 +121,5 @@ def evaluate_video_directory(root_dir):
 
 # Main program
 if __name__ == "__main__":
-    root_dir = '../data/raw'  # Change to your video directory path
+    root_dir = 'data/raw'  # Change to your video directory path
     evaluate_video_directory(root_dir)
